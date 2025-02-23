@@ -6,6 +6,38 @@
 # mute output from git clone commands unless output is from stderr? (1>)
 # (and implement progress bar or some progress icon like pipx does)
 
+run_with_spinner() {
+    local command="$1"
+    local message="$2"
+
+    spinner() {
+        local i sp n
+        sp='/-\|'
+        n=${#sp}
+        printf ' '
+        while sleep 0.2; do
+            printf "%s\b" "${sp:i++%n:1}"
+        done
+    }
+
+    echo "$message "
+    #start spinner and remove cursor
+    spinner &
+    local spinner_pid=$!
+    tput civis
+
+    eval "$command"
+    local command_status=$?
+
+    #kill spinner and restore cursor
+    kill $spinner_pid &>/dev/null
+    tput cnorm
+    echo
+
+    return $command_status
+
+}
+
 detect_package_manager() {
     if command -v pacman &> /dev/null; then
         printf "pacman"
@@ -47,21 +79,35 @@ install_packages() {
 
 install_packages
 
-echo "Installing bearer"
-curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh
+run_with_spinner "curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh 1>/dev/null" "Installing bearer"
 
-echo "Cloning rules for semgrep"
 mkdir rules
 cd rules
-git clone https://github.com/semgrep/semgrep-rules
+run_with_spinner "git clone https://github.com/semgrep/semgrep-rules --quiet" "Cloning rules for semgrep"
 cd ../
 
-
 echo "Downloading CodeQL"
-wget https://github.com/github/codeql-action/releases/latest/download/codeql-bundle-linux64.tar.zst
-echo "Extracting archive, please wait..."
-tar --zstd -xvf codeql-bundle-linux64.tar.zst 1> /dev/null #to not output stdout
-echo "Exctration done!"
+wget https://github.com/github/codeql-action/releases/latest/download/codeql-bundle-linux64.tar.zst -q --show-progress
+
+run_with_spinner "tar --zstd -xvf codeql-bundle-linux64.tar.zst 1>/dev/null" "Extracting archive, please wait..."
+echo "Extraction done!"
 rm codeql-bundle-linux64.tar.zst
-#probably no need to add to PATH because we can just invoke it manually
-#but maybe we need to add SUST_INSTALL (as in current work dir for this script) to path
+
+echo "Adding SUST_INSTALL_DIR to your .bashrc / .zshrc"
+
+SCRIPT_DIR=$(pwd)
+if [ "$SHELL" == "/usr/bin/zsh" ]; then
+    echo "export SUST_INSTALL_DIR=\"$SCRIPT_DIR\"" >> ~/.zshrc
+    source ~/.zshrc
+else
+    echo "export SUST_INSTALL_DIR=\"$SCRIPT_DIR\"" >> ~/.bashrc
+    source ~/.bashrc
+fi
+
+echo "Installation done! You can use sust.sh with the following arguments:"
+echo -e "\t-p/--path /path/to/project\t-path to project that will be scanned"
+echo -e "\t-m/--mode fast/full\t-analysis mode. fast (default) launches semgrep and bearer, full launches CodeQL too"
+echo -e "\t-r/--rules /path/to/rules\t-path to scanner rules. By default - $SUST_INSTALL_DIR/rules/"
+echo -e "\t-h/--help\t-prints help message of sust.sh\n"
+
+
