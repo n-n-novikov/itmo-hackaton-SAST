@@ -59,7 +59,9 @@ cd ../
 
 echo "Downloading CodeQL"
 wget https://github.com/github/codeql-action/releases/latest/download/codeql-bundle-linux64.tar.zst
+echo "Extracting archive, please wait..."
 tar --zstd -xvf codeql-bundle-linux64.tar.zst 1> /dev/null #to not output stdout
+echo "Exctration done!"
 rm codeql-bundle-linux64.tar.zst
 #probably no need to add to PATH because we can just invoke it manually
 #but maybe we need to add SUST_INSTALL (as in current work dir for this script) to path
