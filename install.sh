@@ -129,7 +129,8 @@ fi
 echo "Installation done! You can use sust.sh with the following arguments:"
 echo -e "\t-p/--path /path/to/project\t-path to project that will be scanned"
 echo -e "\t-m/--mode fast/full\t-analysis mode. fast (default) launches semgrep and bearer, full launches CodeQL too"
-echo -e "\t-r/--rules /path/to/rules\t-path to scanner rules. By default - $SUST_INSTALL_DIR/rules/"
+echo -e "\t-b/--bearer-rules /path/to/rules/\t-path to bearer rules"
+echo -e "\t-s/--semgrep-rules /path/to/rules/\t-path to semgrep rules ($INSTALL_DIR/rules/semgrep-rules/ by default)"
 echo -e "\t-h/--help\t-prints help message of sust.sh\n"
 
 
