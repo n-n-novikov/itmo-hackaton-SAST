@@ -3,8 +3,7 @@
 
 # Ideas:
 # implement /tmp installation maybe?
-# mute output from git clone commands unless output is from stderr? (1>)
-# (and implement progress bar or some progress icon like pipx does)
+
 
 run_with_spinner() {
     local command="$1"
@@ -79,6 +78,26 @@ install_packages() {
 
 install_packages
 
+echo "Choose SUST installation type:"
+echo "1: Persistent installation (in current directory) (default)"
+echo "2: Temporary installation (in /tmp/sust)"
+while true; do
+    read -p "Choose 1 or 2: " INSTALL_CHOICE
+    if [ "$INSTALL_CHOICE" == "1" ] || [ "$INSTALL_CHOICE" == "2" ]; then
+        break
+    else
+        echo "Invalid choice. Enter only '1' or '2'"
+    fi
+done
+
+if [ "$INSTALL_CHOICE"=="2" ]; then
+    INSTALL_DIR="/tmp/sust"
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+else
+    INSTALL_DIR=$(pwd)
+fi
+
 run_with_spinner "curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh 1>/dev/null" "Installing bearer"
 
 mkdir rules
@@ -93,15 +112,18 @@ run_with_spinner "tar --zstd -xvf codeql-bundle-linux64.tar.zst 1>/dev/null" "Ex
 echo "Extraction done!"
 rm codeql-bundle-linux64.tar.zst
 
-echo "Adding SUST_INSTALL_DIR to your .bashrc / .zshrc"
-
-SCRIPT_DIR=$(pwd)
-if [ "$SHELL" == "/usr/bin/zsh" ]; then
-    echo "export SUST_INSTALL_DIR=\"$SCRIPT_DIR\"" >> ~/.zshrc
-    source ~/.zshrc
+if [ "$INSTALL_CHOICE" == "1" ]; then
+    echo "Adding SUST_INSTALL_DIR to your .bashrc / .zshrc"
+    if [ "$SHELL" == "/usr/bin/zsh" ]; then
+        echo "export SUST_INSTALL_DIR=\"$INSTALL_DIR\"" >> ~/.zshrc
+        source ~/.zshrc
+    else
+        echo "export SUST_INSTALL_DIR=\"$INSTALL_DIR\"" >> ~/.bashrc
+        source ~/.bashrc
+    fi
 else
-    echo "export SUST_INSTALL_DIR=\"$SCRIPT_DIR\"" >> ~/.bashrc
-    source ~/.bashrc
+    export SUST_INSTALL_DIR="$INSTALL_DIR"
+    echo "Exported SUST_INSTALL_DIR. Open sust.sh from the same shell, or use export SUST_INSTALL_DIR=\"$INSTALL_DIR\""
 fi
 
 echo "Installation done! You can use sust.sh with the following arguments:"
