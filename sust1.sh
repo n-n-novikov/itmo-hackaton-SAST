@@ -8,6 +8,7 @@ SEMGREP_RULES=""
 TIMESTAMP=$(date +%Y-%m-%d_%H:%M:%S)
 
 show_help() {
+    echo $SUST_INSTALL_DIR
     echo "Использование: $0 [опции]"
     echo ""
     echo "Опции:"
