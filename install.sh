@@ -105,7 +105,7 @@ run_with_spinner "curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main
 mkdir rules
 cd rules
 run_with_spinner "git clone https://github.com/semgrep/semgrep-rules --quiet" "Cloning rules for semgrep"
-rm ./semgrep-rules/Pipfile* ./semgrep-rules/Makefile ./semgrep-rules/*.md ./semgrep-rules/LICENSE ./semgrep-rules/template.yaml ./semgrep-rules/.* 
+rm -r ./semgrep-rules/Pipfile* ./semgrep-rules/Makefile ./semgrep-rules/*.md ./semgrep-rules/LICENSE ./semgrep-rules/template.yaml ./semgrep-rules/.* ./semgrep-rules/stats
 cd ../
 
 echo "Downloading CodeQL"
