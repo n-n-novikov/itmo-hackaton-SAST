@@ -17,7 +17,9 @@ show_help() {
     echo "  -p, --path <путь>        Путь к проекту для анализа"
     echo "  -m, --mode <режим>       Режим анализа (fast/full)"
     echo "  -b, --bearer-rules <путь> Путь к правилам bearer"
-    echo "  -s, --semgrep-rules <путь> Путь к правилам semgrep. По умолчанию - $SUST_INSTALL_DIR/rules/semgrep_rules"
+    echo "  -s, --semgrep-rules <путь> Путь к правилам semgrep. По умолчанию - все правила из $SUST_INSTALL_DIR/rules/semgrep-rules"
+    echo "  (если указать -s \"\" то будут использоваться правила из онлайн реестра Semgrep)"
+    echo "  (чтобы ускорить процесс можно указать путь к правилам для языка проекта, напр. $SUST_INSTALL_DIR/rules/semgrep-rules/python/)"
     exit 1
 }
 
