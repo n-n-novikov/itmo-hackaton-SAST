@@ -105,7 +105,9 @@ run_with_spinner "curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main
 mkdir rules
 cd rules
 run_with_spinner "git clone https://github.com/semgrep/semgrep-rules --quiet" "Cloning rules for semgrep"
-rm -r ./semgrep-rules/Pipfile* ./semgrep-rules/Makefile ./semgrep-rules/*.md ./semgrep-rules/LICENSE ./semgrep-rules/template.yaml ./semgrep-rules/.* ./semgrep-rules/stats
+rm -rf ./semgrep-rules/Pipfile* ./semgrep-rules/Makefile ./semgrep-rules/*.md ./semgrep-rules/LICENSE ./semgrep-rules/template.yaml ./semgrep-rules/.* ./semgrep-rules/stats
+rm -rf ./semgrep-rules/dockerfile/audit ./semgrep-rules/*/best-practice
+find ./semgrep-rules/ -type f -not -name "*.yaml" -delete
 cd ../
 
 echo "Downloading CodeQL"
@@ -135,6 +137,12 @@ echo -e "\t-m/--mode fast/full\t-analysis mode. fast (default) launches semgrep 
 echo -e "\t-b/--bearer-rules /path/to/rules/\t-path to bearer rules"
 echo -e "\t-s/--semgrep-rules /path/to/rules/\t-path to semgrep rules ($INSTALL_DIR/rules/semgrep-rules/ by default)"
 echo -e "\t-h/--help\t-prints help message of sust.sh\n"
-echo -e "\nAttention! If you've launched this using bash install.sh, you need to source ~/.bashrc (in case of persistent install), or use \nexport SUST_INSTALL_DIR=\"$INSTALL_DIR\""
 
+if [ "$INSTALL_CHOICE" == "1" ]; then
+    echo -e "\nAttention! If you've launched this using bash/zsh install.sh, you need to source ~/.zshrc, or use \nexport SUST_INSTALL_DIR=\"$INSTALL_DIR\""
+else 
+    echo -e "\nAttention! If you've launched this using bash/zsh install.sh, you need to use \nexport SUST_INSTALL_DIR=\"$INSTALL_DIR\""
+fi
+
+    
 

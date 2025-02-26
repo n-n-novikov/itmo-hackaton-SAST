@@ -8,8 +8,6 @@ BEARER_RULES=""
 SEMGREP_RULES="$SUST_INSTALL_DIR/rules/semgrep-rules"
 TIMESTAMP=$(date +%Y-%m-%d_%H:%M:%S)
 
-#выход, в случае если произошла ошибка
-set -e
 
 show_help() {
     echo $SUST_INSTALL_DIR
@@ -71,11 +69,11 @@ run_fast_analysis() {
 
     # Запуск bearer с правилами, если они указаны
     if [ -n "$BEARER_RULES" ]; then
-        bearer scan "$PROJECT_PATH" --external-rule-dir "$BEARER_RULES" --output bearer_sast_report_${TIMESTAMP}.log
-        bearer scan "$PROJECT_PATH" --external-rule-dir "$BEARER_RULES" --scanner secrets --output bearer_secrets_report_${TIMESTAMP}.log
+        $SUST_INSTALL_DIR/bin/bearer scan "$PROJECT_PATH" --external-rule-dir "$BEARER_RULES" --output bearer_sast_report_${TIMESTAMP}.log
+        $SUST_INSTALL_DIR/bin/bearer scan "$PROJECT_PATH" --external-rule-dir "$BEARER_RULES" --scanner secrets --output bearer_secrets_report_${TIMESTAMP}.log
     else
-        bearer scan "$PROJECT_PATH" --output bearer_sast_report_${TIMESTAMP}.log
-        bearer scan "$PROJECT_PATH" --scanner secrets --output bearer_secrets_report_${TIMESTAMP}.log
+        $SUST_INSTALL_DIR/bin/bearer scan "$PROJECT_PATH" --output bearer_sast_report_${TIMESTAMP}.log
+        $SUST_INSTALL_DIR/bin/bearer scan "$PROJECT_PATH" --scanner secrets --output bearer_secrets_report_${TIMESTAMP}.log
     fi
 }
 
@@ -146,9 +144,56 @@ run_full_analysis() {
     cd "$PROJECT_PATH"
 
     create_codeql_db
-    $SUST_INSTALL_DIR/codeql/codeql database analyze sust_db --format=csv --output=$ORIGINAL_DIR/codeql_report_${TIMESTAMP}.csv
+    $SUST_INSTALL_DIR/codeql/codeql database analyze sust_analysis_db --format=csv --output=$ORIGINAL_DIR/codeql_report_${TIMESTAMP}.csv
     rm -rf sust_analysis_db
     cd "$ORIGINAL_DIR"
+}
+
+print_results() {
+    RED='\033[0;31m'
+    YELLOW='\033[0;33m'
+    GREEN='\033[0;32m'
+    BLUE='\033[0;34m'
+    MAGENTA='\033[0;35m'
+    CYAN='\033[0;36m'
+    BOLD='\033[1m'
+    UNDERLINE='\033[4m'
+    RESET='\033[0m'
+    echo -e "Вывести результаты?\ny/n:"
+    read result_choice
+    if [ "$result_choice" == "y" ]; then
+        cat semgrep_report_${TIMESTAMP}.log
+        cat bearer_sast_report_${TIMESTAMP}.log
+        if [ "$ANALYSIS_MODE" == "full" ]; then
+            awk -F, '{
+                # Remove quotes from fields
+                gsub(/^"|"$/, "", $1);
+                gsub(/^"|"$/, "", $2);
+                gsub(/^"|"$/, "", $3);
+                gsub(/^"|"$/, "", $4);
+                gsub(/^"|"$/, "", $5);
+                gsub(/^"|"$/, "", $6);
+
+                # Determine severity color
+                if ($3 == "error") {
+                severity_color = "'${RED}'";
+                } else if ($3 == "warning") {
+                severity_color = "'${YELLOW}'";
+                } else {
+                severity_color = "'${GREEN}'";
+                }
+
+                # Print formatted output
+                printf "\n'${BOLD}${CYAN}'═════════════════════════════════════════════════════════'${RESET}'\n";
+                printf "'${BOLD}'Issue:    '${RESET}${BLUE}${BOLD}'%s'${RESET}'\n", $1;
+                printf "'${BOLD}'Severity: '${RESET}'%s'${severity_color}${BOLD}'%s'${RESET}'\n", "", $3;
+                printf "'${BOLD}'Location: '${RESET}${MAGENTA}'%s'${RESET}' (Line %s, Col %s)\n", $5, $6, $7;
+                printf "'${BOLD}'Details:  '${RESET}'%s\n", $2;
+                printf "'${BOLD}'Context:  '${RESET}'%s\n", $4;
+            }' "codeql_report_$TIMESTAMP.csv"
+            echo -e "\n${BOLD}${CYAN}═════════════════════════════════════════════════════════${RESET}"
+        fi
+    fi
 }
 
 # Основной процесс
@@ -164,3 +209,5 @@ case "$ANALYSIS_MODE" in
         exit 1
         ;;
 esac
+
+print_results
