@@ -107,7 +107,7 @@ cd rules
 run_with_spinner "git clone https://github.com/semgrep/semgrep-rules --quiet" "Cloning rules for semgrep"
 rm -rf ./semgrep-rules/Pipfile* ./semgrep-rules/Makefile ./semgrep-rules/*.md ./semgrep-rules/LICENSE ./semgrep-rules/template.yaml ./semgrep-rules/.* ./semgrep-rules/stats
 rm -rf ./semgrep-rules/dockerfile/audit ./semgrep-rules/*/best-practice
-find ./semgrep-rules/ -type f -not -name "*.yaml" -delete
+find ./ -type f ! \( -name "*.yaml" -o -name "*.yml" \) -delete
 cd ../
 
 echo "Downloading CodeQL"
